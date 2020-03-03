@@ -497,8 +497,10 @@ func createMessage(c *protonmail.Client, u *protonmail.User, privateKeys openpgp
 
 			pr, pw := io.Pipe()
 
+			spr, spw := io.Pipe()
+
 			go func() {
-				cleartext, err := att.Encrypt(pw, privateKey)
+				cleartext, err := att.Encrypt(pw, spw, privateKey)
 				if err != nil {
 					pw.CloseWithError(err)
 					return
@@ -507,6 +509,16 @@ func createMessage(c *protonmail.Client, u *protonmail.User, privateKeys openpgp
 					pw.CloseWithError(err)
 					return
 				}
+
+				go func () {
+					b := bytes.Buffer{}
+					if _, err := io.Copy(&b, spr); err != nil {
+						pw.CloseWithError(err)
+						return
+					}
+					att.SignatureBuff = b
+				}()
+
 				pw.CloseWithError(cleartext.Close())
 			}()
 

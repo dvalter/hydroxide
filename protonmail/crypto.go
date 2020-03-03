@@ -103,7 +103,7 @@ func generateUnencryptedKey(cipher packet.CipherFunction, config *packet.Config)
 	}, nil
 }
 
-func symetricallyEncrypt(ciphertext io.Writer, symKey *packet.EncryptedKey, signer *packet.PrivateKey, hints *openpgp.FileHints, config *packet.Config) (plaintext io.WriteCloser, err error) {
+func symmetricallyEncrypt(ciphertext io.Writer, signature io.WriteCloser, symKey *packet.EncryptedKey, signer *packet.PrivateKey, hints *openpgp.FileHints, config *packet.Config) (plaintext io.WriteCloser, err error) {
 	// From https://github.com/golang/crypto/blob/master/openpgp/write.go#L172
 
 	encryptedData, err := packet.SerializeSymmetricallyEncrypted(ciphertext, symKey.CipherFunc, symKey.Key, config)
@@ -147,7 +147,9 @@ func symetricallyEncrypt(ciphertext io.Writer, symKey *packet.EncryptedKey, sign
 	}
 
 	if signer != nil {
-		return signatureWriter{encryptedData, literalData, hash, hash.New(), signer, config}, nil
+		return signatureWriter{encryptedData, literalData, hash, hash.New(), signer, config, signature}, nil
+	} else {
+		signature.Close()
 	}
 	return literalData, nil
 }
@@ -162,6 +164,7 @@ type signatureWriter struct {
 	h             hash.Hash
 	signer        *packet.PrivateKey
 	config        *packet.Config
+	signature     io.WriteCloser
 }
 
 func (s signatureWriter) Write(data []byte) (int, error) {
@@ -186,6 +189,14 @@ func (s signatureWriter) Close() error {
 	}
 	if err := sig.Serialize(s.encryptedData); err != nil {
 		return err
+	}
+	if s.signature != nil {
+		if err := sig.Serialize(s.signature); err != nil {
+			return err
+		}
+		if err := s.signature.Close(); err != nil {
+			return err
+		}
 	}
 	return s.encryptedData.Close()
 }

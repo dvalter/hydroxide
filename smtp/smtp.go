@@ -212,17 +212,27 @@ func (s *session) Data(r io.Reader) error {
 			log.Printf("uploading message attachment %q", filename)
 
 			pr, pw := io.Pipe()
+			spr, spw := io.Pipe()
 
 			go func() {
-				cleartext, err := att.Encrypt(pw, privateKey)
+				cleartext, err := att.Encrypt(pw, spw, privateKey)
 				if err != nil {
 					pw.CloseWithError(err)
 					return
-				}
-				if _, err := io.Copy(cleartext, p.Body); err != nil {
+				} else if _, err := io.Copy(cleartext, p.Body); err != nil {
 					pw.CloseWithError(err)
 					return
 				}
+
+				go func () {
+					b := bytes.Buffer{}
+					if _, err := io.Copy(&b, spr); err != nil {
+						pw.CloseWithError(err)
+						return
+					}
+					att.SignatureBuff = b
+				}()
+
 				pw.CloseWithError(cleartext.Close())
 			}()
 
