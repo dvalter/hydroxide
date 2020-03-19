@@ -29,7 +29,7 @@ import (
 func newClient() *protonmail.Client {
 	return &protonmail.Client{
 		RootURL:    "https://mail.protonmail.com/api",
-		AppVersion: "Web_3.16.6",
+		AppVersion: "Web_3.16.21",
 	}
 }
 
@@ -206,6 +206,11 @@ func main() {
 					log.Fatal(err)
 				}
 				a.Scope = scope
+			}
+
+			err = c.AuthCookies(a)
+			if err != nil {
+				log.Fatal(err)
 			}
 		}
 
