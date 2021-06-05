@@ -143,7 +143,7 @@ func isMbox(br *bufio.Reader) (bool, error) {
 
 const usage = `usage: hydroxide [options...] <command>
 Commands:
-	auth <username>		Login to ProtonMail via hydroxide
+	auth <username>	[SessionId]	Login to ProtonMail via hydroxide
 	carddav			Run hydroxide as a CardDAV server
 	export-secret-keys <username> Export secret keys
 	imap			Run hydroxide as an IMAP server
@@ -213,10 +213,11 @@ func main() {
 		authCmd.Parse(flag.Args()[1:])
 		username := authCmd.Arg(0)
 		if username == "" {
-			log.Fatal("usage: hydroxide auth <username>")
+			log.Fatal("usage: hydroxide auth <username> [SessionId]")
 		}
 
 		c := newClient()
+		c.SessionId = authCmd.Arg(1) // "" is a valid no-value
 
 		var a *protonmail.Auth
 		/*if cachedAuth, ok := auths[username]; ok {

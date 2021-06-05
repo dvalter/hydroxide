@@ -62,6 +62,7 @@ func (t Timestamp) Time() time.Time {
 type Client struct {
 	RootURL    string
 	AppVersion string
+	SessionId  string
 	Debug      bool
 
 	HTTPClient *http.Client
@@ -91,6 +92,9 @@ func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request,
 
 	req.Header.Set("X-Pm-Appversion", c.AppVersion)
 	req.Header.Set(headerAPIVersion, strconv.Itoa(Version))
+	if c.SessionId != "" {
+		req.AddCookie(&http.Cookie{Name:  "Session-Id", Value: c.SessionId})
+	}
 	c.setRequestAuthorization(req)
 	return req, nil
 }
