@@ -35,9 +35,10 @@ var debug bool
 
 func newClient() *protonmail.Client {
 	return &protonmail.Client{
-		RootURL:    "https://mail.protonmail.com/api",
-		AppVersion: "Web_3.16.6",
-		Debug:      debug,
+		RootURL:     "https://mail.protonmail.com/api",
+		RootAuthURL: "https://account.protonmail.com/api",
+		AppVersion:  "WebAccount_4.2.12",
+		Debug:       debug,
 	}
 }
 

@@ -60,9 +60,17 @@ func (t Timestamp) Time() time.Time {
 
 // Client is a ProtonMail API client.
 type Client struct {
+<<<<<<< HEAD
 	RootURL    string
 	AppVersion string
 	Debug      bool
+=======
+	RootURL     string
+	RootAuthURL string
+	AppVersion  string
+	SessionId   string
+	Debug       bool
+>>>>>>> 1a0ec5e (Use separate domain for auth-related endpoints)
 
 	HTTPClient *http.Client
 	ReAuth     func() error
@@ -80,7 +88,15 @@ func (c *Client) setRequestAuthorization(req *http.Request) {
 }
 
 func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, c.RootURL+path, body)
+	return c.newRequestRoot(method, path, body, c.RootURL)
+}
+
+func (c *Client) newAuthRequest(method, path string, body io.Reader) (*http.Request, error) {
+	return c.newRequestRoot(method, path, body, c.RootAuthURL)
+}
+
+func (c *Client) newRequestRoot(method, path string, body io.Reader, rootURL string) (*http.Request, error) {
+	req, err := http.NewRequest(method, rootURL+path, body)
 	if err != nil {
 		return nil, err
 	}
@@ -96,13 +112,21 @@ func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request,
 }
 
 func (c *Client) newJSONRequest(method, path string, body interface{}) (*http.Request, error) {
+	return c.newJSONRequestRoot(method, path, body, c.RootURL)
+}
+
+func (c *Client) newAuthJSONRequest(method, path string, body interface{}) (*http.Request, error) {
+	return c.newJSONRequestRoot(method, path, body, c.RootAuthURL)
+}
+
+func (c *Client) newJSONRequestRoot(method, path string, body interface{}, rootURL string) (*http.Request, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
 		return nil, err
 	}
 	b := buf.Bytes()
 
-	req, err := c.newRequest(method, path, bytes.NewReader(b))
+	req, err := c.newRequestRoot(method, path, bytes.NewReader(b), rootURL)
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ func (c *Client) AuthInfo(username string) (*AuthInfo, error) {
 		Username: username,
 	}
 
-	req, err := c.newJSONRequest(http.MethodPost, "/auth/info", reqData)
+	req, err := c.newAuthJSONRequest(http.MethodPost, "/auth/info", reqData)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (c *Client) Auth(username, password string, info *AuthInfo) (*Auth, error) 
 		ClientProof:     base64.StdEncoding.EncodeToString(proofs.clientProof),
 	}
 
-	req, err := c.newJSONRequest(http.MethodPost, "/auth", reqData)
+	req, err := c.newAuthJSONRequest(http.MethodPost, "/auth", reqData)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (c *Client) AuthTOTP(code string) (scope string, err error) {
 		TwoFactorCode: code,
 	}
 
-	req, err := c.newJSONRequest(http.MethodPost, "/auth/2fa", reqData)
+	req, err := c.newAuthJSONRequest(http.MethodPost, "/auth/2fa", reqData)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +185,7 @@ func (c *Client) AuthRefresh(expiredAuth *Auth) (*Auth, error) {
 		RedirectURI:  "http://www.protonmail.ch",
 	}
 
-	req, err := c.newJSONRequest(http.MethodPost, "/auth/refresh", reqData)
+	req, err := c.newAuthJSONRequest(http.MethodPost, "/auth/refresh", reqData)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (c *Client) AuthRefresh(expiredAuth *Auth) (*Auth, error) {
 }
 
 func (c *Client) ListKeySalts() (map[string][]byte, error) {
-	req, err := c.newRequest(http.MethodGet, "/keys/salts", nil)
+	req, err := c.newAuthRequest(http.MethodGet, "/keys/salts", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (c *Client) Unlock(auth *Auth, keySalts map[string][]byte, passphrase strin
 }
 
 func (c *Client) Logout() error {
-	req, err := c.newRequest(http.MethodDelete, "/auth", nil)
+	req, err := c.newAuthRequest(http.MethodDelete, "/auth", nil)
 	if err != nil {
 		return err
 	}
